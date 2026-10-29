@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#0E0F12" />
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="none" stroke="#262A33" stroke-width="8" />
+  <!-- Minimal Graphite pulse / activity mark in accent #C6F432 -->
+  <polyline
+    points="96,270 176,270 224,140 288,372 336,270 416,270"
+    fill="none"
+    stroke="#C6F432"
+    stroke-width="36"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="288" cy="372" r="14" fill="#C6F432" />
+</svg>

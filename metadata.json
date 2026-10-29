@@ -1,0 +1,6 @@
+{
+  "name": "CozyFit",
+  "description": "A minimal, high-contrast workout tracker with streaks, weekly badges, and offline-first storage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
