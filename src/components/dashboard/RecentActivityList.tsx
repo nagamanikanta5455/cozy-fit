@@ -59,7 +59,7 @@ export const RecentActivityList: React.FC<RecentActivityListProps> = ({
               <button
                 type="button"
                 onClick={onLogClick}
-                className="mt-2 text-xs font-semibold text-[var(--accent-text)] bg-[var(--accent-fill)] px-3 py-1.5 rounded-lg hover:brightness-105 cursor-pointer inline-block"
+                className="mt-2 text-xs font-bold text-black dark:text-black bg-[var(--accent-fill)] px-3 py-1.5 rounded-lg hover:brightness-105 active:opacity-95 cursor-pointer inline-block"
               >
                 Log your first workout
               </button>

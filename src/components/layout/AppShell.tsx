@@ -130,13 +130,13 @@ export const AppShell: React.FC<AppShellProps> = ({
                 onClick={onOpenLogger}
                 aria-label="Log workout"
                 title="Log workout (N)"
-                className="w-full h-10 px-2 xl:px-4 rounded-xl bg-[var(--accent-fill)] hover:brightness-105 active:opacity-95 text-[#0E0F12] font-bold text-xs shadow-xs flex items-center justify-center xl:justify-between transition-standard cursor-pointer"
+                className="w-full h-10 px-2 xl:px-4 rounded-xl bg-[var(--accent-fill)] hover:brightness-105 active:opacity-95 text-black dark:text-black font-bold text-xs shadow-xs flex items-center justify-center xl:justify-between transition-standard cursor-pointer"
               >
-                <div className="flex items-center gap-2">
-                  <Plus className="w-4 h-4 stroke-[2.25] shrink-0" />
-                  <span className="hidden xl:inline">Log workout</span>
+                <div className="flex items-center gap-2 text-black dark:text-black">
+                  <Plus className="w-4 h-4 stroke-[2.25] shrink-0 text-black dark:text-black" />
+                  <span className="hidden xl:inline text-black dark:text-black">Log workout</span>
                 </div>
-                <kbd className="hidden xl:inline-block px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-[#0E0F12]/15 rounded border border-[#0E0F12]/20 text-[#0E0F12]">
+                <kbd className="hidden xl:inline-block px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-black/15 rounded border border-black/20 text-black dark:text-black">
                   N
                 </kbd>
               </button>
@@ -309,10 +309,10 @@ export const AppShell: React.FC<AppShellProps> = ({
                 type="button"
                 onClick={onOpenLogger}
                 aria-label="Log workout"
-                className="xl:hidden h-8 px-3 rounded-lg bg-[var(--accent-fill)] hover:brightness-105 active:opacity-95 text-[#0E0F12] font-bold text-xs flex items-center gap-1.5 transition-standard cursor-pointer"
+                className="xl:hidden h-8 px-3 rounded-lg bg-[var(--accent-fill)] hover:brightness-105 active:opacity-95 text-black dark:text-black font-bold text-xs flex items-center gap-1.5 transition-standard cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Log</span>
+                <Plus className="w-3.5 h-3.5 stroke-[2.5] text-black dark:text-black" />
+                <span className="text-black dark:text-black">Log</span>
               </button>
 
               <span className="text-xs font-medium text-[var(--text-muted)] tabular-nums">

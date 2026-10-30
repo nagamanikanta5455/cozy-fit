@@ -153,7 +153,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <button
                 type="button"
                 onClick={onOpenLogger}
-                className="text-[var(--accent-text)] bg-[var(--accent-fill)] px-2.5 py-1 rounded-lg font-bold text-xs hover:brightness-105 cursor-pointer"
+                className="text-black dark:text-black bg-[var(--accent-fill)] px-2.5 py-1 rounded-lg font-bold text-xs hover:brightness-105 cursor-pointer"
               >
                 Log now
               </button>

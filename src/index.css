@@ -52,6 +52,7 @@
   --text-faint: #5B6270;
   --accent-fill: #C6F432;
   --accent-ink: #0E0F12;
+  --accent-text: #0E0F12;
   --status-success: #4ADE80;
   --status-danger: #F87171;
 
@@ -81,6 +82,7 @@
   --text-faint: #888C94;
   --accent-fill: #C6F432;
   --accent-ink: #4D6B00;
+  --accent-text: #0E0F12;
   --status-success: #16A34A;
   --status-danger: #DC2626;
 

@@ -46,7 +46,7 @@ export const QuickLogRow: React.FC<QuickLogRowProps> = ({
         type="button"
         onClick={handleClick}
         aria-label={`Quick log ${meta.label} for ${lastWorkout.durationMin} minutes`}
-        className="px-3 py-1.5 h-8 rounded-lg bg-[var(--bg-surface-raised)] hover:bg-[var(--accent-fill)] hover:text-[#0E0F12] border border-[var(--border-subtle)] text-xs font-bold text-[var(--text-primary)] cursor-pointer transition-standard shrink-0 whitespace-nowrap"
+        className="px-3.5 py-1.5 h-8 rounded-lg bg-[var(--accent-fill)] hover:brightness-105 active:opacity-95 text-black dark:text-black font-bold text-xs shadow-xs cursor-pointer transition-standard shrink-0 whitespace-nowrap"
       >
         Log
       </button>
