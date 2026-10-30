@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 import { Workout, Settings, PersistedState, AchievementId, ISODate } from '../domain/types';
 import {
   CURRENT_SCHEMA_VERSION,
@@ -51,49 +51,6 @@ export interface AppState extends PersistedState {
   setQuotaWarning: (warning: boolean) => void;
   syncFromStorage: () => void;
 }
-
-const STORAGE_KEY = 'cozy-fit-storage';
-
-// Safe localStorage wrapper handling quota issues and legacy key migration
-const safeStorage = {
-  getItem: (name: string): string | null => {
-    try {
-      if (typeof localStorage === 'undefined') {
-        return null;
-      }
-      let raw = localStorage.getItem(name);
-      // Migrate from legacy key if existing progress was stored under cozyfit:v1
-      if (!raw && name === STORAGE_KEY) {
-        raw = localStorage.getItem('cozyfit:v1');
-      }
-      return raw;
-    } catch (e) {
-      console.error('Storage getItem failed:', e);
-      return null;
-    }
-  },
-  setItem: (name: string, value: string): void => {
-    try {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(name, value);
-      }
-    } catch (err: unknown) {
-      console.warn('Storage setItem failed (possible quota exceeded):', err);
-      if (err instanceof DOMException && (err.name === 'QuotaExceededError' || err.code === 22)) {
-        useAppStore.getState().setQuotaWarning(true);
-      }
-    }
-  },
-  removeItem: (name: string): void => {
-    try {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.removeItem(name);
-      }
-    } catch (e) {
-      console.error('Storage removeItem failed:', e);
-    }
-  },
-};
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -311,7 +268,8 @@ export const useAppStore = create<AppState>()(
 
       syncFromStorage: () => {
         try {
-          const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('cozyfit:v1');
+          if (typeof localStorage === 'undefined') return;
+          const raw = localStorage.getItem('cozy-fit-storage') || localStorage.getItem('cozyfit:v1');
           if (raw) {
             const state = validateOrRecoverPersistedState(raw);
             set({
@@ -330,9 +288,7 @@ export const useAppStore = create<AppState>()(
       },
     }),
     {
-      name: STORAGE_KEY,
-      storage: createJSONStorage(() => safeStorage),
-      version: CURRENT_SCHEMA_VERSION,
+      name: 'cozy-fit-storage',
       partialize: (state) => ({
         schemaVersion: state.schemaVersion,
         workouts: state.workouts,
@@ -342,32 +298,27 @@ export const useAppStore = create<AppState>()(
         unlockedAchievements: state.unlockedAchievements,
         achievementUnlockedDates: state.achievementUnlockedDates,
       }),
-      migrate: (persistedState: unknown, version: number) => {
-        if (!persistedState || typeof persistedState !== 'object') {
-          return DEFAULT_PERSISTED_STATE;
+      onRehydrateStorage: () => (state) => {
+        // If cozy-fit-storage is empty upon first load, migrate any existing data from legacy key
+        if (state && state.workouts.length === 0 && typeof localStorage !== 'undefined') {
+          try {
+            const legacyRaw = localStorage.getItem('cozyfit:v1');
+            if (legacyRaw) {
+              const legacy = validateOrRecoverPersistedState(legacyRaw);
+              if (legacy.workouts.length > 0) {
+                useAppStore.setState({
+                  workouts: legacy.workouts,
+                  settings: legacy.settings,
+                  seenCelebrations: legacy.seenCelebrations,
+                  unlockedAchievements: legacy.unlockedAchievements,
+                  achievementUnlockedDates: legacy.achievementUnlockedDates,
+                });
+              }
+            }
+          } catch (e) {
+            // Ignore legacy recovery error
+          }
         }
-        const rawState = persistedState as Record<string, any>;
-        if (version < 1) {
-          return DEFAULT_PERSISTED_STATE;
-        }
-        if (version === 1 || rawState.schemaVersion === 1) {
-          return {
-            ...rawState,
-            schemaVersion: 2,
-            settings: {
-              ...DEFAULT_PERSISTED_STATE.settings,
-              ...(rawState.settings || {}),
-              priorStats: rawState.settings?.priorStats || {
-                totalWorkouts: 0,
-                totalMinutes: 0,
-                longestStreak: 0,
-              },
-            },
-            unlockedAchievements: rawState.unlockedAchievements || [],
-            achievementUnlockedDates: rawState.achievementUnlockedDates || {},
-          } as PersistedState;
-        }
-        return rawState as unknown as PersistedState;
       },
     }
   )
@@ -376,7 +327,7 @@ export const useAppStore = create<AppState>()(
 // Listen to storage events for multi-tab synchronization
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
-    if (e.key === STORAGE_KEY || e.key === 'cozyfit:v1') {
+    if (e.key === 'cozy-fit-storage' || e.key === 'cozyfit:v1') {
       useAppStore.getState().syncFromStorage();
     }
   });

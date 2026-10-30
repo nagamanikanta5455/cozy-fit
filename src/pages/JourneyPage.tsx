@@ -37,64 +37,68 @@ export const JourneyPage: React.FC<JourneyPageProps> = ({
   longestStreak,
   onOpenLogger,
 }) => {
-  const currentYear = parseInt(today.split('-')[0], 10);
-  const [selectedYear, setSelectedYear] = useState<number | 'all'>('all');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Selected cell for pinned inspection
   const [pinnedDay, setPinnedDay] = useState<HeatmapDay | null>(null);
+  // Hovered cell for floating tooltip
   const [hoveredDay, setHoveredDay] = useState<{
     day: HeatmapDay;
     x: number;
     y: number;
   } | null>(null);
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // Selected year filter (or 'all')
+  const [selectedYear, setSelectedYear] = useState<string>('all');
 
-  // Available year chips
-  const availableYears = useMemo(() => {
-    const years = new Set<number>();
-    years.add(currentYear);
-    workouts.forEach((w) => {
-      const y = parseInt(w.date.split('-')[0], 10);
-      if (!isNaN(y)) years.add(y);
-    });
-    return Array.from(years).sort((a, b) => b - a);
-  }, [workouts, currentYear]);
-
-  // Generate heatmap weeks
+  // Build full heatmap weeks
   const allWeeks = useMemo(() => {
     return buildHeatmapWeeks(workouts, today);
   }, [workouts, today]);
 
-  // Compute month labels aligned with grid columns
+  // Extract all distinct years with activity (plus current year)
+  const years = useMemo(() => {
+    const yearSet = new Set<string>();
+    const currentYear = today.slice(0, 4);
+    yearSet.add(currentYear);
+    for (const w of workouts) {
+      yearSet.add(w.date.slice(0, 4));
+    }
+    return Array.from(yearSet).sort();
+  }, [workouts, today]);
+
+  // Month header labels
   const monthLabels = useMemo(() => {
     return getMonthLabels(allWeeks);
   }, [allWeeks]);
 
-  // Initial scroll position: Scroll to the right (most recent weeks)
+  // Total active days count
+  const activeDays = useMemo(() => {
+    const dates = new Set<string>();
+    for (const w of workouts) {
+      dates.add(w.date);
+    }
+    return dates.size;
+  }, [workouts]);
+
+  // Auto-scroll to far right (today) on mount
   useLayoutEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
+    const el = scrollContainerRef.current;
+    if (el) {
+      el.scrollLeft = el.scrollWidth;
     }
   }, [allWeeks]);
 
-  // Horizontal scroll controls: scroll 8 weeks (8 * 20px = 160px)
-  const scrollHeatmap = (deltaWeeks: number) => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({
-        left: deltaWeeks * 20,
-        behavior: 'smooth',
-      });
-    }
-  };
-
-  // Enable mouse wheel horizontal scrolling
+  // Enable mouse wheel and shift+wheel horizontal scrolling
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
 
     const handleWheel = (e: WheelEvent) => {
-      if (e.deltaY !== 0 && e.deltaX === 0) {
-        e.preventDefault();
+      // If user is scrolling vertically with mouse wheel without holding shift, scroll horizontally
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && !e.shiftKey) {
         el.scrollLeft += e.deltaY;
+        e.preventDefault();
       }
     };
 
@@ -102,91 +106,73 @@ export const JourneyPage: React.FC<JourneyPageProps> = ({
     return () => el.removeEventListener('wheel', handleWheel);
   }, []);
 
-  // Jump to specific year start
-  const handleYearSelect = (year: number | 'all') => {
+  // Scroll by 8 weeks (8 * (16 + 4) = 160px)
+  const handleScrollWeeks = (direction: 'left' | 'right') => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const distance = 8 * 20; // 8 weeks * 20px (16px cell + 4px gap)
+    el.scrollBy({
+      left: direction === 'left' ? -distance : distance,
+      behavior: 'smooth',
+    });
+  };
+
+  // Scroll to a specific year
+  const handleScrollToYear = (year: string) => {
     setSelectedYear(year);
-    if (!scrollContainerRef.current) return;
+    const el = scrollContainerRef.current;
+    if (!el) return;
 
     if (year === 'all') {
-      scrollContainerRef.current.scrollTo({
-        left: scrollContainerRef.current.scrollWidth,
-        behavior: 'smooth',
-      });
+      el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' });
       return;
     }
 
-    const targetWeekIdx = allWeeks.findIndex((w) => {
-      return w.days.some((d) => d.date.startsWith(`${year}-`));
-    });
+    // Find the first week index belonging to this year
+    const weekIdx = allWeeks.findIndex((w) =>
+      w.days.some((d) => d.date.startsWith(year))
+    );
 
-    if (targetWeekIdx !== -1) {
-      scrollContainerRef.current.scrollTo({
-        left: targetWeekIdx * 20,
-        behavior: 'smooth',
-      });
+    if (weekIdx !== -1) {
+      el.scrollTo({ left: weekIdx * 20, behavior: 'smooth' });
     }
   };
 
-  if (workouts.length === 0) {
-    return (
-      <div className="py-16 text-center max-w-sm mx-auto space-y-4">
-        <div className="w-12 h-12 rounded-2xl bg-[var(--bg-surface-raised)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--accent-fill)] mx-auto">
-          <Activity className="w-6 h-6 stroke-[1.75]" />
-        </div>
-        <div className="space-y-1">
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-            Your journey begins here
-          </h3>
-          <p className="text-xs text-[var(--text-muted)] max-w-xs mx-auto leading-relaxed">
-            Every workout you log kindles your all-time consistency map.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onOpenLogger}
-          className="px-4 py-2 rounded-xl bg-[var(--accent-fill)] text-black dark:text-black font-bold text-xs shadow-xs hover:brightness-105 active:opacity-95 transition-standard cursor-pointer inline-flex items-center gap-1.5"
-        >
-          <span>Log first workout</span>
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {/* Page Header and Year Filter Bar */}
+      {/* Header Info */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
-            All-Time Consistency Map
+            The Journey
           </h2>
           <p className="text-xs text-[var(--text-muted)] mt-1">
-            Browse your full workout history with 16px high-density interactive cells.
+            All-time consistency heatmap and lifetime movement records.
           </p>
         </div>
 
         {/* Year Filter Chips */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--bg-surface-raised)] border border-[var(--border-subtle)] overflow-x-auto shrink-0">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             type="button"
-            onClick={() => handleYearSelect('all')}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-standard ${
+            onClick={() => handleScrollToYear('all')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-standard ${
               selectedYear === 'all'
-                ? 'bg-[var(--accent-fill)] text-black dark:text-black font-bold shadow-xs'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                ? 'bg-[var(--accent-fill)] text-[#0E0F12]'
+                : 'bg-[var(--bg-surface-raised)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
             }`}
           >
-            Recent
+            All time
           </button>
-          {availableYears.map((yr) => (
+          {years.map((yr) => (
             <button
               key={yr}
               type="button"
-              onClick={() => handleYearSelect(yr)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-standard ${
+              onClick={() => handleScrollToYear(yr)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-standard ${
                 selectedYear === yr
-                  ? 'bg-[var(--accent-fill)] text-black dark:text-black font-bold shadow-xs'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                  ? 'bg-[var(--accent-fill)] text-[#0E0F12]'
+                  : 'bg-[var(--bg-surface-raised)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
               }`}
             >
               {yr}
@@ -195,77 +181,81 @@ export const JourneyPage: React.FC<JourneyPageProps> = ({
         </div>
       </div>
 
-      {/* Stats Summary Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card className="p-4 flex items-center gap-3" variant="raised">
+      {/* Summary KPI Strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Card className="p-3.5 flex items-center gap-3" variant="default">
           <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-raised)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--accent-fill)] shrink-0">
-            <Flame className="w-4 h-4" />
+            <Activity className="w-4 h-4 stroke-[2]" />
           </div>
           <div>
-            <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider block">
-              Longest Streak
+            <span className="text-[11px] text-[var(--text-muted)] font-medium block">
+              Active Days
             </span>
-            <span className="text-base font-bold text-[var(--text-primary)] tabular-nums">
-              {longestStreak} days
+            <span className="text-lg font-bold text-[var(--text-primary)] tabular-nums">
+              {activeDays}
             </span>
           </div>
         </Card>
 
-        <Card className="p-4 flex items-center gap-3" variant="raised">
+        <Card className="p-3.5 flex items-center gap-3" variant="default">
           <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-raised)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--accent-fill)] shrink-0">
-            <Calendar className="w-4 h-4" />
+            <Flame className="w-4 h-4 stroke-[2]" />
           </div>
           <div>
-            <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider block">
-              Span Tracked
+            <span className="text-[11px] text-[var(--text-muted)] font-medium block">
+              Longest Consistency Streak
             </span>
-            <span className="text-base font-bold text-[var(--text-primary)] tabular-nums">
-              {allWeeks.length} weeks
+            <span className="text-lg font-bold text-[var(--text-primary)] tabular-nums">
+              {longestStreak} {longestStreak === 1 ? 'day' : 'days'}
             </span>
           </div>
         </Card>
 
-        <Card className="p-4 flex items-center gap-3" variant="raised">
-          <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-raised)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--accent-fill)] shrink-0">
-            <Activity className="w-4 h-4" />
+        <Card className="p-3.5 flex items-center gap-3" variant="default">
+          <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-raised)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-muted)] shrink-0">
+            <Calendar className="w-4 h-4 stroke-[2]" />
           </div>
           <div>
-            <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider block">
-              Total Sessions
+            <span className="text-[11px] text-[var(--text-muted)] font-medium block">
+              Logged Workouts
             </span>
-            <span className="text-base font-bold text-[var(--text-primary)] tabular-nums">
-              {workouts.length}
+            <span className="text-lg font-bold text-[var(--text-primary)] tabular-nums">
+              {workouts.length} total
             </span>
           </div>
         </Card>
+      </div>
 
-        <Card className="p-4 flex items-center justify-between" variant="raised">
-          <span className="text-xs text-[var(--text-muted)] font-medium">Controls</span>
+      {/* Main Full-Width Heatmap Card */}
+      <Card className="p-5 relative" variant="default">
+        {/* Navigation Chevron Controls */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+            Activity Density Grid (16px cells)
+          </span>
+
           <div className="flex items-center gap-1.5">
             <button
               type="button"
-              onClick={() => scrollHeatmap(-8)}
-              title="Scroll back 8 weeks"
-              aria-label="Scroll back 8 weeks"
-              className="h-8 w-8 rounded-lg bg-[var(--bg-surface-raised)] hover:bg-[var(--accent-fill)] hover:text-black dark:hover:text-black border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-muted)] transition-colors cursor-pointer"
+              onClick={() => handleScrollWeeks('left')}
+              aria-label="Scroll left 8 weeks"
+              title="Scroll left 8 weeks"
+              className="h-8 w-8 rounded-lg bg-[var(--bg-surface-raised)] hover:bg-[var(--accent-fill)] hover:text-[#0E0F12] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-muted)] transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               type="button"
-              onClick={() => scrollHeatmap(8)}
-              title="Scroll forward 8 weeks"
-              aria-label="Scroll forward 8 weeks"
-              className="h-8 w-8 rounded-lg bg-[var(--bg-surface-raised)] hover:bg-[var(--accent-fill)] hover:text-black dark:hover:text-black border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-muted)] transition-colors cursor-pointer"
+              onClick={() => handleScrollWeeks('right')}
+              aria-label="Scroll right 8 weeks"
+              title="Scroll right 8 weeks"
+              className="h-8 w-8 rounded-lg bg-[var(--bg-surface-raised)] hover:bg-[var(--accent-fill)] hover:text-[#0E0F12] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-muted)] transition-colors cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-        </Card>
-      </div>
+        </div>
 
-      {/* Main Heatmap Card */}
-      <Card className="p-5 overflow-hidden" variant="default">
         {/* Floating Hover Tooltip */}
         {hoveredDay && (
           <div
@@ -375,7 +365,7 @@ export const JourneyPage: React.FC<JourneyPageProps> = ({
               <span className="font-bold text-[var(--text-primary)]">
                 {formatDetailDate(parseISODate(pinnedDay.date))}
               </span>
-              <span className="text-black dark:text-black bg-[var(--accent-fill)] px-2 py-0.5 rounded font-semibold tabular-nums">
+              <span className="text-[var(--accent-text)] bg-[var(--accent-fill)]/15 px-2 py-0.5 rounded font-semibold tabular-nums">
                 {pinnedDay.count > 0
                   ? `${pinnedDay.count} workout${pinnedDay.count === 1 ? '' : 's'} (${pinnedDay.minutes} min)`
                   : 'Rest day (0 min)'}
@@ -383,17 +373,17 @@ export const JourneyPage: React.FC<JourneyPageProps> = ({
             </div>
           ) : (
             <span className="text-[var(--text-faint)] italic">
-              Click any square to inspect that day's log
+              Click any cell to pin activity details, or scroll with mouse wheel / chevrons.
             </span>
           )}
 
-          {/* Heatmap Legend */}
-          <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-faint)] shrink-0 select-none">
+          {/* Legend */}
+          <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] select-none">
             <span>Less</span>
-            <div className="w-[12px] h-[12px] rounded-[2px] bg-[var(--heat-0)] border border-[var(--heat-border)]" />
-            <div className="w-[12px] h-[12px] rounded-[2px] bg-[var(--heat-1)] border border-[var(--heat-border)]" />
-            <div className="w-[12px] h-[12px] rounded-[2px] bg-[var(--heat-2)] border border-[var(--heat-border)]" />
-            <div className="w-[12px] h-[12px] rounded-[2px] bg-[var(--heat-3)] border border-[var(--heat-border)]" />
+            <div className="w-3 h-3 rounded-[2px] bg-[var(--heat-0)] border border-[var(--heat-border)]" />
+            <div className="w-3 h-3 rounded-[2px] bg-[var(--heat-1)] border border-[var(--heat-border)]" />
+            <div className="w-3 h-3 rounded-[2px] bg-[var(--heat-2)] border border-[var(--heat-border)]" />
+            <div className="w-3 h-3 rounded-[2px] bg-[var(--heat-3)] border border-[var(--heat-border)]" />
             <span>More</span>
           </div>
         </div>
