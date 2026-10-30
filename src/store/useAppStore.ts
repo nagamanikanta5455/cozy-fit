@@ -52,21 +52,24 @@ export interface AppState extends PersistedState {
   syncFromStorage: () => void;
 }
 
-const STORAGE_KEY = 'cozyfit:v1';
+const STORAGE_KEY = 'cozy-fit-storage';
 
-// Custom storage wrapper with corruption recovery and QuotaExceededError catch
+// Safe localStorage wrapper handling quota issues and legacy key migration
 const safeStorage = {
   getItem: (name: string): string | null => {
     try {
       if (typeof localStorage === 'undefined') {
-        return JSON.stringify(DEFAULT_PERSISTED_STATE);
+        return null;
       }
-      const raw = localStorage.getItem(name);
-      const validated = validateOrRecoverPersistedState(raw);
-      return JSON.stringify(validated);
+      let raw = localStorage.getItem(name);
+      // Migrate from legacy key if existing progress was stored under cozyfit:v1
+      if (!raw && name === STORAGE_KEY) {
+        raw = localStorage.getItem('cozyfit:v1');
+      }
+      return raw;
     } catch (e) {
       console.error('Storage getItem failed:', e);
-      return JSON.stringify(DEFAULT_PERSISTED_STATE);
+      return null;
     }
   },
   setItem: (name: string, value: string): void => {
@@ -308,7 +311,7 @@ export const useAppStore = create<AppState>()(
 
       syncFromStorage: () => {
         try {
-          const raw = localStorage.getItem(STORAGE_KEY);
+          const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('cozyfit:v1');
           if (raw) {
             const state = validateOrRecoverPersistedState(raw);
             set({
@@ -340,13 +343,13 @@ export const useAppStore = create<AppState>()(
         achievementUnlockedDates: state.achievementUnlockedDates,
       }),
       migrate: (persistedState: unknown, version: number) => {
+        if (!persistedState || typeof persistedState !== 'object') {
+          return DEFAULT_PERSISTED_STATE;
+        }
+        const rawState = persistedState as Record<string, any>;
         if (version < 1) {
           return DEFAULT_PERSISTED_STATE;
         }
-        const rawState = (persistedState && typeof persistedState === 'object'
-          ? (persistedState as Record<string, any>)
-          : {}) as Record<string, any>;
-
         if (version === 1 || rawState.schemaVersion === 1) {
           return {
             ...rawState,
@@ -373,7 +376,7 @@ export const useAppStore = create<AppState>()(
 // Listen to storage events for multi-tab synchronization
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
-    if (e.key === STORAGE_KEY) {
+    if (e.key === STORAGE_KEY || e.key === 'cozyfit:v1') {
       useAppStore.getState().syncFromStorage();
     }
   });

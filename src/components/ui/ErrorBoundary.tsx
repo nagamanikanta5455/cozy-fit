@@ -26,7 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   private handleExportBackup = () => {
     try {
-      const data = localStorage.getItem('cozyfit:v1') || '{}';
+      const data = localStorage.getItem('cozy-fit-storage') || localStorage.getItem('cozyfit:v1') || '{}';
       const blob = new Blob([data], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

@@ -91,7 +91,10 @@ export function validateOrRecoverPersistedState(rawJson: string | null): Persist
   }
 
   try {
-    const parsed = JSON.parse(rawJson);
+    let parsed = JSON.parse(rawJson);
+    if (parsed && typeof parsed === 'object' && 'state' in parsed && parsed.state && typeof parsed.state === 'object') {
+      parsed = parsed.state;
+    }
 
     // Migration: schemaVersion 1 -> 2
     if (parsed && typeof parsed === 'object') {
