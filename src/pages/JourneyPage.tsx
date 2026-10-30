@@ -223,7 +223,7 @@ export const JourneyPage: React.FC<JourneyPageProps> = ({
         {/* Navigation Chevron Controls */}
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-            Activity Density Grid (16px cells)
+            Activity Density Grid 
           </span>
 
           <div className="flex items-center gap-1.5">
