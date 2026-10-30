@@ -9,6 +9,7 @@ export default defineConfig(() => {
       react(),
       tailwindcss(),
     ],
+    base: '/cozy-fit/',
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
