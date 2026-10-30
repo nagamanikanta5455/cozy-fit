@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { exportBackupWithShare } from '../../utils/backup';
 import { useToast } from '../ui/Toast';
-import { triggerHaptic } from '../../utils/haptics';
 import { ShieldCheck, X } from 'lucide-react';
 
 interface BackupNudgeCardProps {
@@ -26,13 +25,12 @@ export const BackupNudgeCard: React.FC<BackupNudgeCardProps> = ({ workoutCount }
   }
 
   const handleBackup = async () => {
-    triggerHaptic('light');
     const res = await exportBackupWithShare();
     if (res.success) {
       showToast({
         type: 'success',
         title: 'Backup saved',
-        description: res.method === 'share' ? 'Shared to files.' : 'Downloaded backup file.',
+        description: 'Downloaded backup file.',
       });
       setDismissed(true);
     }
@@ -58,7 +56,7 @@ export const BackupNudgeCard: React.FC<BackupNudgeCardProps> = ({ workoutCount }
         <button
           type="button"
           onClick={handleBackup}
-          className="px-3 py-1.5 min-h-[36px] rounded-lg bg-[var(--bg-surface-raised)] hover:bg-[var(--accent-fill)] hover:text-[#0E0F12] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] cursor-pointer transition-standard"
+          className="px-3 py-1.5 h-8 rounded-lg bg-[var(--bg-surface-raised)] hover:bg-[var(--accent-fill)] hover:text-[#0E0F12] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] cursor-pointer transition-standard"
         >
           Export
         </button>
@@ -66,7 +64,8 @@ export const BackupNudgeCard: React.FC<BackupNudgeCardProps> = ({ workoutCount }
           type="button"
           onClick={() => setDismissed(true)}
           aria-label="Dismiss backup notice"
-          className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-lg transition-colors"
+          title="Dismiss"
+          className="h-8 w-8 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-raised)] rounded-lg transition-colors cursor-pointer"
         >
           <X className="w-3.5 h-3.5" />
         </button>

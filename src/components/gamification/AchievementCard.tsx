@@ -92,8 +92,8 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ badge }) => {
     if (IconComponent) {
       return <IconComponent className="w-4 h-4" />;
     }
-    // Fallback if not mapped or emoji
-    return <span className="text-sm select-none">{badge.icon || '🏆'}</span>;
+    // Fallback icon from Lucide
+    return <Trophy className="w-4 h-4" />;
   };
 
   const progressPercent =

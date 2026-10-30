@@ -2,7 +2,6 @@ import React from 'react';
 import { Button } from '../ui/Button';
 import { useAppStore } from '../../store/useAppStore';
 import { Plus, Settings as SettingsIcon, Sun, Moon } from 'lucide-react';
-import { triggerHaptic } from '../../utils/haptics';
 
 interface HeaderProps {
   onOpenLogger: () => void;
@@ -14,7 +13,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenLogger, onOpenSettings }) 
   const updateSettings = useAppStore((state) => state.updateSettings);
 
   const toggleTheme = () => {
-    triggerHaptic('light');
     const nextTheme = currentTheme === 'light' ? 'evening' : 'light';
     updateSettings({ theme: nextTheme });
   };
@@ -22,7 +20,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenLogger, onOpenSettings }) 
   const isLight = currentTheme === 'light';
 
   return (
-    <header className="sticky top-0 z-20 bg-[var(--bg-app)]/90 backdrop-blur-md border-b border-[var(--border-subtle)] transition-colors pt-safe">
+    <header className="sticky top-0 z-20 bg-[var(--bg-app)]/90 backdrop-blur-md border-b border-[var(--border-subtle)] transition-colors">
       <div className="max-w-md md:max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
         {/* Brand */}
         <div className="flex items-center gap-2 select-none">
@@ -39,7 +37,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenLogger, onOpenSettings }) 
             type="button"
             onClick={toggleTheme}
             aria-label={`Switch to ${isLight ? 'dark' : 'light'} theme`}
-            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-raised)] transition-standard cursor-pointer"
+            className="h-8 w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-raised)] transition-standard cursor-pointer"
             title="Toggle theme"
           >
             {isLight ? (
@@ -52,12 +50,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenLogger, onOpenSettings }) 
           {/* Settings button */}
           <button
             type="button"
-            onClick={() => {
-              triggerHaptic('light');
-              onOpenSettings();
-            }}
+            onClick={() => onOpenSettings()}
             aria-label="Open settings"
-            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-raised)] transition-standard cursor-pointer"
+            className="h-8 w-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-raised)] transition-standard cursor-pointer"
             title="Settings"
           >
             <SettingsIcon className="w-4 h-4 stroke-[1.75]" />
@@ -66,10 +61,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenLogger, onOpenSettings }) 
           {/* Desktop Log button */}
           <div className="hidden sm:block ml-2">
             <Button
-              onClick={() => {
-                triggerHaptic('light');
-                onOpenLogger();
-              }}
+              onClick={() => onOpenLogger()}
               size="sm"
               variant="primary"
               leftIcon={<Plus className="w-4 h-4" />}

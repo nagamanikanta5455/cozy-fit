@@ -9,7 +9,7 @@ export interface ExportRange {
 
 export interface ExportResult {
   success: boolean;
-  method?: 'share' | 'download';
+  method?: 'download';
   count: number;
   error?: string;
   cancelled?: boolean;
@@ -28,7 +28,7 @@ export function filterWorkoutsByRange(
 }
 
 /**
- * Export workouts matching a date range (or all-time) with Web Share API and Blob download fallback.
+ * Export workouts matching a date range (or all-time) via direct Blob file download.
  * Updates lastExportAt only if all workouts are included in the export.
  */
 export async function exportWorkoutsWithRange(
@@ -58,45 +58,7 @@ export async function exportWorkoutsWithRange(
 
   const jsonString = JSON.stringify(exportPayload, null, 2);
 
-  // Try Web Share API (mobile file sharing)
-  if (typeof navigator !== 'undefined' && 'share' in navigator && 'canShare' in navigator) {
-    try {
-      const file = new File([jsonString], filename, {
-        type: 'application/json',
-      });
-
-      if (navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: `CozyFit Backup (${filteredWorkouts.length} workouts)`,
-          text: `CozyFit backup from ${range.start} to ${range.end}.`,
-        });
-
-        if (isAllTime || filteredWorkouts.length === workouts.length) {
-          useAppStore.setState({ lastExportAt: Date.now() });
-        }
-
-        return {
-          success: true,
-          method: 'share',
-          count: filteredWorkouts.length,
-        };
-      }
-    } catch (err: unknown) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        // User dismissed share sheet - treat as silent cancel, not failure
-        return {
-          success: true,
-          method: 'share',
-          count: filteredWorkouts.length,
-          cancelled: true,
-        };
-      }
-      console.warn('Web Share failed, falling back to download:', err);
-    }
-  }
-
-  // Fallback: Browser Blob download via temporary anchor
+  // Desktop file download through temporary anchor
   try {
     const blob = new Blob([jsonString], { type: 'application/json' });
     const url = URL.createObjectURL(blob);

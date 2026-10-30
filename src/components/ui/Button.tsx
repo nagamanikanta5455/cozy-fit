@@ -19,6 +19,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       leftIcon,
       rightIcon,
       disabled,
+      type = 'button',
       ...props
     },
     ref
@@ -27,16 +28,16 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       'inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold rounded-xl select-none cursor-pointer focus-visible:outline-2 focus-visible:outline-[var(--accent-fill)] focus-visible:outline-offset-2 disabled:opacity-40 disabled:cursor-not-allowed transition-standard';
 
     const sizeClasses = {
-      sm: 'text-xs px-3 py-2 min-h-[36px]',
-      md: 'text-sm px-4 py-2.5 min-h-11',
-      lg: 'text-base px-6 py-3 min-h-12',
+      sm: 'text-xs px-3 h-8',
+      md: variant === 'primary' ? 'text-xs px-4 h-10 font-bold' : 'text-xs px-3.5 h-9',
+      lg: 'text-sm px-5 h-10',
     }[size];
 
     const variantClasses = {
       primary:
-        'bg-[#C6F432] text-[#0E0F12] hover:brightness-105 active:opacity-90 font-bold',
+        'bg-[#C6F432] text-[#0E0F12] hover:brightness-105 active:opacity-90 font-bold shadow-xs',
       secondary:
-        'bg-[var(--bg-surface-raised)] border border-[var(--border-subtle)] text-[var(--text-primary)] hover:border-[var(--text-muted)] active:opacity-90',
+        'bg-[var(--bg-surface-raised)] border border-[var(--border-subtle)] text-[var(--text-primary)] hover:border-[var(--text-muted)] hover:bg-[var(--bg-surface-raised)]/80 active:opacity-90',
       ghost:
         'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-raised)] active:opacity-90',
       danger:
@@ -48,6 +49,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
+        type={type}
         disabled={disabled}
         className={`${baseClasses} ${sizeClasses} ${variantClasses} ${widthClass} ${className}`}
         {...props}

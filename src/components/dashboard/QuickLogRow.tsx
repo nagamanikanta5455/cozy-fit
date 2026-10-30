@@ -2,7 +2,6 @@ import React from 'react';
 import { Workout, ISODate } from '../../domain/types';
 import { WORKOUT_TYPES } from '../../domain/constants';
 import { WorkoutIcon } from '../ui/WorkoutIcon';
-import { triggerHaptic } from '../../utils/haptics';
 
 interface QuickLogRowProps {
   lastWorkout: Workout | null;
@@ -18,8 +17,7 @@ export const QuickLogRow: React.FC<QuickLogRowProps> = ({
 
   const meta = WORKOUT_TYPES[lastWorkout.type] || WORKOUT_TYPES.other;
 
-  const handleTap = () => {
-    triggerHaptic('light');
+  const handleClick = () => {
     onQuickLog(lastWorkout.type, lastWorkout.durationMin);
   };
 
@@ -39,16 +37,16 @@ export const QuickLogRow: React.FC<QuickLogRowProps> = ({
             </span>
           </div>
           <p className="text-[11px] text-[var(--text-muted)] truncate mt-0.5">
-            Log today with one tap
+            Log today with one click
           </p>
         </div>
       </div>
 
       <button
         type="button"
-        onClick={handleTap}
+        onClick={handleClick}
         aria-label={`Quick log ${meta.label} for ${lastWorkout.durationMin} minutes`}
-        className="px-3 py-1.5 min-h-[38px] rounded-lg bg-[var(--bg-surface-raised)] hover:bg-[var(--accent-fill)] hover:text-[#0E0F12] border border-[var(--border-subtle)] text-xs font-bold text-[var(--text-primary)] cursor-pointer transition-standard shrink-0 whitespace-nowrap"
+        className="px-3 py-1.5 h-8 rounded-lg bg-[var(--bg-surface-raised)] hover:bg-[var(--accent-fill)] hover:text-[#0E0F12] border border-[var(--border-subtle)] text-xs font-bold text-[var(--text-primary)] cursor-pointer transition-standard shrink-0 whitespace-nowrap"
       >
         Log
       </button>

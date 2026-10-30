@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
-import { triggerHaptic } from '../../utils/haptics';
 
 interface ModalProps {
   isOpen: boolean;
@@ -9,7 +8,6 @@ interface ModalProps {
   description?: string;
   children: React.ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg';
-  isSheetOnMobile?: boolean;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -19,63 +17,82 @@ export const Modal: React.FC<ModalProps> = ({
   description,
   children,
   maxWidth = 'md',
-  isSheetOnMobile = true,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
-  const [sheetTranslateY, setSheetTranslateY] = useState(0);
-  const touchStartY = useRef(0);
-  const isDragging = useRef(false);
+  const triggerElementRef = useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
+  // Store previously focused element to return focus on close
   useEffect(() => {
     if (isOpen) {
+      triggerElementRef.current = document.activeElement as HTMLElement | null;
       document.body.style.overflow = 'hidden';
-      setSheetTranslateY(0);
     } else {
       document.body.style.overflow = '';
+      if (triggerElementRef.current && typeof triggerElementRef.current.focus === 'function') {
+        triggerElementRef.current.focus();
+      }
     }
     return () => {
       document.body.style.overflow = '';
     };
   }, [isOpen]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (!isSheetOnMobile) return;
-    touchStartY.current = e.touches[0].clientY;
-    isDragging.current = true;
-  };
+  // Handle Escape key and Focus Trap
+  useEffect(() => {
+    if (!isOpen) return;
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging.current || !isSheetOnMobile) return;
-    const currentY = e.touches[0].clientY;
-    const deltaY = currentY - touchStartY.current;
-    if (deltaY > 0) {
-      setSheetTranslateY(deltaY);
-    }
-  };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+        return;
+      }
 
-  const handleTouchEnd = () => {
-    if (!isDragging.current || !isSheetOnMobile) return;
-    isDragging.current = false;
-    if (sheetTranslateY > 80) {
-      triggerHaptic('light');
-      onClose();
-    } else {
-      setSheetTranslateY(0);
-    }
-  };
+      // Focus trap
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+
+        if (focusableElements.length === 0) {
+          e.preventDefault();
+          return;
+        }
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Initial focus into modal
+    const focusTimeout = setTimeout(() => {
+      if (modalRef.current) {
+        const focusable = modalRef.current.querySelector<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        focusable?.focus();
+      }
+    }, 50);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      clearTimeout(focusTimeout);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -90,42 +107,19 @@ export const Modal: React.FC<ModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-xs transition-standard pb-safe"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-xs transition-standard"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
       }}
     >
       <div
         ref={modalRef}
-        style={{
-          transform: sheetTranslateY > 0 ? `translateY(${sheetTranslateY}px)` : undefined,
-          transition: isDragging.current ? 'none' : 'transform 0.15s ease-out',
-        }}
-        className={`w-full ${maxWidthClass} bg-[var(--bg-surface)] border border-[var(--border-subtle)] ${
-          isSheetOnMobile
-            ? 'rounded-t-xl sm:rounded-xl max-h-[90dvh]'
-            : 'rounded-xl max-h-[90dvh]'
-        } flex flex-col overflow-hidden text-[var(--text-primary)] shadow-2xl`}
+        className={`w-full ${maxWidthClass} bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl max-h-[85vh] flex flex-col overflow-hidden text-[var(--text-primary)] shadow-2xl transition-standard`}
       >
-        {/* Drag handle */}
-        {isSheetOnMobile && (
-          <div
-            className="flex sm:hidden justify-center pt-2.5 pb-1 cursor-grab touch-none"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <div className="w-10 h-1 rounded-full bg-[var(--border-subtle)]" />
-          </div>
-        )}
-
         {/* Header */}
-        <div
-          className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--border-subtle)] touch-none"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--border-subtle)] shrink-0">
           <div className="min-w-0 pr-2">
             <h2 id="modal-title" className="text-base font-semibold tracking-tight truncate">
               {title}
@@ -138,13 +132,14 @@ export const Modal: React.FC<ModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-lg transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center shrink-0"
+            title="Close"
+            className="h-8 w-8 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-raised)] rounded-lg transition-colors cursor-pointer flex items-center justify-center shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Scrollable Content Body */}
+        {/* Internal Scrollable Content Body */}
         <div className="p-5 overflow-y-auto space-y-4 overscroll-contain flex-1">
           {children}
         </div>

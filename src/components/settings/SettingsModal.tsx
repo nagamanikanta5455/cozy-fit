@@ -5,7 +5,6 @@ import { Button } from '../ui/Button';
 import { useToast } from '../ui/Toast';
 import { useToday } from '../../hooks/useToday';
 import { ExportDataModal } from '../export/ExportDataModal';
-import { triggerHaptic } from '../../utils/haptics';
 import { validatePriorStats, sanitizePriorStats, sumLoggedTotals } from '../../store/statsSelectors';
 import { calculateStreak } from '../../domain/streak';
 import { PriorStats } from '../../domain/types';
@@ -92,7 +91,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     });
 
     setPriorSaved(true);
-    triggerHaptic('light');
     showToast({
       type: 'success',
       title: 'Prior stats saved',
@@ -136,7 +134,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   };
 
   const handleOpenExportModal = () => {
-    triggerHaptic('light');
     setIsExportModalOpen(true);
   };
 

@@ -7,7 +7,6 @@ import { Workout, Settings, ISODate } from '../../domain/types';
 import { toISODate, addDaysToISODate } from '../../domain/dates';
 import { exportWorkoutsWithRange, filterWorkoutsByRange } from '../../store/exportData';
 import { Download, Share2, Check, AlertCircle } from 'lucide-react';
-import { triggerHaptic } from '../../utils/haptics';
 
 interface ExportDataModalProps {
   isOpen: boolean;
@@ -57,19 +56,16 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
   }, [workouts, startDate, endDate, isValidRange]);
 
   const handleSelectAllTime = () => {
-    triggerHaptic('light');
     setStartDate(earliestDate);
     setEndDate(today);
   };
 
   const handleSelectLast30 = () => {
-    triggerHaptic('light');
     setStartDate(addDaysToISODate(today, -30));
     setEndDate(today);
   };
 
   const handleSelectThisYear = () => {
-    triggerHaptic('light');
     setStartDate(`${today.slice(0, 4)}-01-01`);
     setEndDate(today);
   };
@@ -78,7 +74,6 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
     if (!isValidRange || matchingWorkouts.length === 0) return;
 
     setIsExporting(true);
-    triggerHaptic('light');
 
     try {
       const res = await exportWorkoutsWithRange(

@@ -17,15 +17,26 @@
 }
 
 @layer base {
-  /* GLOBAL FIX A: Hide all scrollbars while preserving touch, mouse wheel, and keyboard scrolling */
+  /* Thin themed desktop scrollbars */
   * {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-subtle) transparent;
   }
-  *::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--border-subtle);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-faint);
   }
 }
 
@@ -85,35 +96,23 @@
 
 html {
   height: 100%;
-  overscroll-behavior-y: contain;
 }
 
 body {
   margin: 0;
   font-family: var(--font-sans);
+  font-size: 0.875rem; /* 14px normal body text with 16px base rem */
+  line-height: 1.25rem;
   background-color: var(--bg-app);
   color: var(--text-primary);
-  min-height: 100dvh;
-  overscroll-behavior-y: contain;
+  min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  -webkit-tap-highlight-color: transparent;
   transition: background-color 0.15s ease-out, color 0.15s ease-out;
 }
 
-button, a, input, select, textarea {
-  touch-action: manipulation;
-}
-
-/* Ensure 16px font-size on all mobile inputs to prevent iOS Safari auto-zoom */
-@media (max-width: 640px) {
-  input, select, textarea {
-    font-size: 16px !important;
-  }
-}
-
-/* GLOBAL FIX B: Calendar picker indicator styling */
+/* Date picker indicator styling */
 input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0.7;
   cursor: pointer;
@@ -136,23 +135,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
-}
-
-/* Safe area insets */
-.pt-safe {
-  padding-top: env(safe-area-inset-top, 0px);
-}
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-.pl-safe {
-  padding-left: env(safe-area-inset-left, 0px);
-}
-.pr-safe {
-  padding-right: env(safe-area-inset-right, 0px);
-}
-.mb-safe {
-  margin-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Focus outline */

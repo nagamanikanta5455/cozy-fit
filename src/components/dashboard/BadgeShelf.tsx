@@ -17,15 +17,15 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({ badgeHistory, achievemen
 
   const unlockedCount = achievements.filter((a) => Boolean(a.unlockedAt)).length;
 
-  // Group achievements into logical tiers to prevent mobile doom-scrolling
+  // Group achievements into logical tiers to prevent doom-scrolling
   const unlockedBadges = achievements.filter((a) => Boolean(a.unlockedAt));
   const knownLockedBadges = achievements.filter((a) => !a.unlockedAt && !a.isHidden);
   const mysteryLockedBadges = achievements.filter((a) => !a.unlockedAt && a.isHidden);
 
   return (
     <Card className="p-3.5 sm:p-5" variant="default">
-      {/* Tab Header Bar: Mobile-optimized with no overflow or squishing */}
-      <div className="flex items-center justify-between gap-2 mb-3.5 min-h-[36px] w-full min-w-0">
+      {/* Tab Header Bar: Resilient responsive header preventing text clip or flex squishing */}
+      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 mb-3.5 min-h-[36px] w-full min-w-0">
         {/* Toggle Pill Buttons with shrink-0 and clean padding */}
         <div className="flex items-center p-0.5 rounded-lg bg-[var(--bg-surface-raised)] border border-[var(--border-subtle)] shrink-0">
           <button
@@ -63,8 +63,8 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({ badgeHistory, achievemen
           </button>
         </div>
 
-        {/* Right Status / Filter indicators: Helper text hidden on mobile to prevent overflow */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Right Status / Filter indicators: Never overflows or clips container */}
+        <div className="flex items-center gap-2 min-w-0 shrink-0">
           {tab === 'milestones' && unlockedCount > 0 && (
             <div className="flex items-center gap-1 text-[11px] shrink-0">
               <button
@@ -93,8 +93,8 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({ badgeHistory, achievemen
             </div>
           )}
 
-          {/* Helper text is hidden on mobile screens (<640px) to prevent overflowing container */}
-          <span className="hidden sm:inline text-xs text-[var(--text-faint)] tabular-nums whitespace-nowrap text-right">
+          {/* Helper text hidden on smaller containers to prevent truncation like '0 of 50 unl' */}
+          <span className="hidden md:inline text-xs text-[var(--text-faint)] tabular-nums truncate max-w-[150px] text-right">
             {tab === 'weekly'
               ? `${badgeHistory.length} ${badgeHistory.length === 1 ? 'badge' : 'badges'}`
               : `${unlockedCount} of ${achievements.length} unlocked`}
@@ -102,7 +102,7 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({ badgeHistory, achievemen
         </div>
       </div>
 
-      {/* Content Area with smooth scroll and clean mobile height */}
+      {/* Content Area with smooth scroll and clean minimum height */}
       <div className="min-h-[260px] max-h-[460px] overflow-y-auto overscroll-contain pr-0.5">
         {tab === 'weekly' ? (
           badgeHistory.length > 0 ? (
@@ -202,7 +202,7 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({ badgeHistory, achievemen
                     </div>
                   </div>
 
-                  {/* Tight CSS grid for the mystery badges: 6 cols on mobile, 8-10 on larger */}
+                  {/* Tight CSS grid for the mystery badges: 6-10 cols depending on width */}
                   <div className="grid grid-cols-6 xs:grid-cols-7 sm:grid-cols-8 md:grid-cols-10 gap-1.5">
                     {mysteryLockedBadges.map((badge, idx) => {
                       const isSelected = selectedMysteryId === badge.id;
@@ -228,7 +228,7 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({ badgeHistory, achievemen
                     })}
                   </div>
 
-                  {/* Interactive hint when tapping a mystery tile */}
+                  {/* Interactive hint when selecting a mystery tile */}
                   {selectedMysteryId && (
                     <div className="mt-2.5 pt-2 border-t border-[var(--border-subtle)]/70 flex items-center justify-between text-[11px] text-[var(--text-muted)]">
                       <span className="italic flex items-center gap-1.5 truncate">

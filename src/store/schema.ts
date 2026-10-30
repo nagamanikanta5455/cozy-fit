@@ -54,6 +54,7 @@ export const SettingsSchema = z.object({
     totalMinutes: 0,
     longestStreak: 0,
   }),
+  installPromptDismissed: z.boolean().optional(),
 });
 
 export const AchievementIdSchema = z.string().min(1);

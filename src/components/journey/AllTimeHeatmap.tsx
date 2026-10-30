@@ -170,8 +170,7 @@ export const AllTimeHeatmap: React.FC<AllTimeHeatmapProps> = ({
           {/* Horizontally scrollable grid container */}
           <div
             ref={scrollContainerRef}
-            className="flex-1 overflow-x-auto touch-pan-x pb-2"
-            style={{ WebkitOverflowScrolling: 'touch', scrollSnapType: 'none' }}
+            className="flex-1 overflow-x-auto pb-2"
           >
             {/* Month Header row */}
             <div
@@ -209,7 +208,7 @@ export const AllTimeHeatmap: React.FC<AllTimeHeatmapProps> = ({
         </div>
       </div>
 
-      {/* Tap-to-Inspect Detail Line */}
+      {/* Click-to-Inspect Detail Line */}
       <div className="min-h-[38px] px-3 py-2 rounded-xl bg-[var(--bg-surface-raised)] border border-[var(--border-subtle)] flex items-center justify-between gap-2 text-xs">
         {selectedDay ? (
           <div className="flex items-center gap-2 min-w-0">
@@ -224,7 +223,7 @@ export const AllTimeHeatmap: React.FC<AllTimeHeatmapProps> = ({
           </div>
         ) : (
           <span className="text-[var(--text-faint)]">
-            Tap any cell to inspect activity details
+            Click any cell to inspect activity details
           </span>
         )}
 
