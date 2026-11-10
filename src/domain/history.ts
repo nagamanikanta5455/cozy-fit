@@ -71,13 +71,28 @@ export function getIntensity(minutes: number): HeatIntensity {
  */
 export function buildHeatmapWeeks(
   workouts: Workout[],
-  today: ISODate
+  today: ISODate,
+  minWeeks?: number
 ): HeatmapWeek[] {
   const dayMap = buildDayMap(workouts);
 
   // Determine starting Monday
   let startWeekMonday: ISODate;
-  if (workouts.length === 0) {
+  if (minWeeks && minWeeks > 0) {
+    const minMonday = addDaysToISODate(getWeekStart(today), -(minWeeks - 1) * 7);
+    if (workouts.length === 0) {
+      startWeekMonday = minMonday;
+    } else {
+      let earliest = workouts[0].date;
+      for (let i = 1; i < workouts.length; i++) {
+        if (workouts[i].date < earliest) {
+          earliest = workouts[i].date;
+        }
+      }
+      const earliestMonday = getWeekStart(earliest);
+      startWeekMonday = earliestMonday < minMonday ? earliestMonday : minMonday;
+    }
+  } else if (workouts.length === 0) {
     // Last 26 weeks ending on current week
     startWeekMonday = addDaysToISODate(getWeekStart(today), -25 * 7);
   } else {

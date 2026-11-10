@@ -17,8 +17,8 @@ export const HeatmapPreviewCard: React.FC<HeatmapPreviewCardProps> = ({
   today,
   onNavigateToJourney,
 }) => {
-  // Build all weeks and take the last 26 weeks for the dashboard preview
-  const allWeeks = useMemo(() => buildHeatmapWeeks(workouts, today), [workouts, today]);
+  // Build all weeks with 26-week minimum baseline and take the last 26 weeks for the dashboard preview
+  const allWeeks = useMemo(() => buildHeatmapWeeks(workouts, today, 26), [workouts, today]);
   const previewWeeks = useMemo(() => allWeeks.slice(-26), [allWeeks]);
   const monthLabels = useMemo(() => getMonthLabels(previewWeeks), [previewWeeks]);
 

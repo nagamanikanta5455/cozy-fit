@@ -51,9 +51,9 @@ export const JourneyPage: React.FC<JourneyPageProps> = ({
   // Selected year filter (or 'all')
   const [selectedYear, setSelectedYear] = useState<string>('all');
 
-  // Build full heatmap weeks
+  // Build full heatmap weeks with minimum 52-week (365-day) complete baseline
   const allWeeks = useMemo(() => {
-    return buildHeatmapWeeks(workouts, today);
+    return buildHeatmapWeeks(workouts, today, 52);
   }, [workouts, today]);
 
   // Extract all distinct years with activity (plus current year)
@@ -81,12 +81,32 @@ export const JourneyPage: React.FC<JourneyPageProps> = ({
     return dates.size;
   }, [workouts]);
 
-  // Auto-scroll to far right (today) on mount
+  // Auto-scroll to far right (today) on mount with multi-stage paint coordination
   useLayoutEffect(() => {
     const el = scrollContainerRef.current;
-    if (el) {
-      el.scrollLeft = el.scrollWidth;
-    }
+    if (!el) return;
+
+    const scrollToToday = () => {
+      if (el) {
+        el.scrollLeft = el.scrollWidth;
+      }
+    };
+
+    // 1. Immediate attempt before paint
+    scrollToToday();
+
+    // 2. Guarded attempt after layout reflow
+    const rafId = requestAnimationFrame(() => {
+      scrollToToday();
+    });
+
+    // 3. Guaranteed fallback after layout/subcomponents are fully painted
+    const timer = setTimeout(scrollToToday, 50);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timer);
+    };
   }, [allWeeks]);
 
   // Enable mouse wheel and shift+wheel horizontal scrolling
@@ -240,7 +260,7 @@ export const JourneyPage: React.FC<JourneyPageProps> = ({
               onClick={() => handleScrollWeeks('left')}
               aria-label="Scroll left 8 weeks"
               title="Scroll left 8 weeks"
-              className="h-8 w-8 rounded-lg bg-[var(--bg-surface-raised)] hover:bg-[var(--accent-fill)] hover:text-[#0E0F12] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-muted)] transition-colors cursor-pointer"
+              className="h-8 w-8 rounded-lg bg-[var(--bg-surface-raised)] hover:bg-[var(--accent-fill)] hover:text-black dark:hover:text-black border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-muted)] transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -249,7 +269,7 @@ export const JourneyPage: React.FC<JourneyPageProps> = ({
               onClick={() => handleScrollWeeks('right')}
               aria-label="Scroll right 8 weeks"
               title="Scroll right 8 weeks"
-              className="h-8 w-8 rounded-lg bg-[var(--bg-surface-raised)] hover:bg-[var(--accent-fill)] hover:text-[#0E0F12] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-muted)] transition-colors cursor-pointer"
+              className="h-8 w-8 rounded-lg bg-[var(--bg-surface-raised)] hover:bg-[var(--accent-fill)] hover:text-black dark:hover:text-black border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-muted)] transition-colors cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

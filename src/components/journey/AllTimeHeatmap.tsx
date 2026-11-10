@@ -73,9 +73,9 @@ export const AllTimeHeatmap: React.FC<AllTimeHeatmapProps> = ({
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Memoize weeks grid calculation
+  // Memoize weeks grid calculation with minimum 52 weeks
   const weeks = useMemo(() => {
-    return buildHeatmapWeeks(workouts, today);
+    return buildHeatmapWeeks(workouts, today, 52);
   }, [workouts, today]);
 
   // Month header labels
